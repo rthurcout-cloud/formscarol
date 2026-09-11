@@ -181,7 +181,7 @@ function pagPaciente(doc, l){
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUT);
   doc.text('Documento de uso interno e sigiloso · LGPD — utilizado apenas para o contato inicial.', 16, 285);
   doc.setTextColor(...GOLD);
-  doc.text('Cuidar de si também é possível. ♡', 16, 291);
+  doc.text('Cuidar de si também é possível.', 16, 291);
 }
 function nomeArq(l){ const nm=(l.nome||'paciente').replace(/[^\p{L}\p{N} ]/gu,'').trim().replace(/\s+/g,' ')||'paciente'; return 'Paciente - '+nm+'.pdf'; }
 function baixarPDF(idx){
