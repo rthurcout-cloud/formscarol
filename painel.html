@@ -200,7 +200,10 @@ function baixarTodos(){
   doc.save('Pacientes - Carolina - '+p(hoje.getDate())+'-'+p(hoje.getMonth()+1)+'-'+hoje.getFullYear()+'.pdf');
 }
 
-// auto-login se ja tinha senha na sessao
-if(CODE){ carregar(); } else { document.getElementById('senha').focus(); }
+// link secreto: aceita a chave pela URL (?k=...) — entra direto, sem digitar
+var urlKey = new URLSearchParams(location.search).get('k');
+if(urlKey){ CODE = urlKey; sessionStorage.setItem('carol-code', urlKey); carregar(); }
+else if(CODE){ carregar(); }
+else { document.getElementById('senha').focus(); }
 </script>
 </body></html>
