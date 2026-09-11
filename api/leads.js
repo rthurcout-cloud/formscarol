@@ -48,13 +48,6 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   if(req.method === 'OPTIONS'){ res.status(200).end(); return; }
 
-  // diagnostico temporario (nao expoe a senha): confere se ACCESS_CODE existe e se bate
-  if(req.method === 'GET' && req.url && req.url.indexOf('diag') !== -1){
-    const hdr = req.headers['x-access-code'] || '';
-    res.status(200).json({ ok:true, hasAccessCode: !!process.env.ACCESS_CODE, accessCodeLen: (process.env.ACCESS_CODE || '').length, matches: hdr === (process.env.ACCESS_CODE || '') });
-    return;
-  }
-
   if(!KV_URL || !KV_TOKEN){ res.status(500).json({ ok:false, error:'KV nao configurado' }); return; }
 
   try {
