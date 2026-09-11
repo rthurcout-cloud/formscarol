@@ -45,15 +45,8 @@ function clean(v, n){
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-access-code');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   if(req.method === 'OPTIONS'){ res.status(200).end(); return; }
-
-  // diagnostico temporario: lista os NOMES das variaveis de ambiente relacionadas (sem valores)
-  if(req.method === 'GET' && req.url && req.url.indexOf('diag') !== -1){
-    const names = Object.keys(process.env).filter(function(k){ return /KV|REDIS|UPSTASH/i.test(k); }).sort();
-    res.status(200).json({ ok:true, envNames:names, hasUrl:!!KV_URL, hasToken:!!KV_TOKEN });
-    return;
-  }
 
   if(!KV_URL || !KV_TOKEN){ res.status(500).json({ ok:false, error:'KV nao configurado' }); return; }
 
@@ -82,6 +75,20 @@ module.exports = async (req, res) => {
       const arr = (await kv(['LRANGE', LIST_KEY, '0', '-1'])) || [];
       const leads = arr.map(function(s){ try { return JSON.parse(s); } catch(e){ return null; } }).filter(Boolean);
       res.status(200).json({ ok:true, total: leads.length, leads: leads });
+      return;
+    }
+
+    if(req.method === 'DELETE'){
+      const code = req.headers['x-access-code'] || '';
+      const expected = process.env.ACCESS_CODE || '';
+      if(!expected || code !== expected){ res.status(401).json({ ok:false, error:'nao autorizado' }); return; }
+      const body = (await readJson(req)) || {};
+      const id = ('' + (body.id || '')).slice(0, 60);
+      if(!id){ res.status(400).json({ ok:false, error:'id ausente' }); return; }
+      const arr = (await kv(['LRANGE', LIST_KEY, '0', '-1'])) || [];
+      const target = arr.find(function(s){ try { return JSON.parse(s).id === id; } catch(e){ return false; } });
+      if(target){ await kv(['LREM', LIST_KEY, '1', target]); }
+      res.status(200).json({ ok:true, removed: !!target });
       return;
     }
 

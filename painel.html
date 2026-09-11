@@ -124,9 +124,24 @@ function render(){
       <div class="row"><span class="l">Encontrou por</span><span class="v">${esc(l.origem)||'—'}</span></div>
       <div class="row"><span class="l">Motivo</span><span class="v">${esc(l.motivo)||'—'}</span></div>
       <div class="row"><span class="l">Expectativa</span><span class="v">${esc(l.expectativa)||'—'}</span></div>
-      <div class="foot"><span class="dt">🕒 ${fmtData(l.criadoEm)}</span><button class="btn sm" onclick="baixarPDF(${LEADS.indexOf(l)})">⬇ PDF</button></div>
+      <div class="foot"><span class="dt">🕒 ${fmtData(l.criadoEm)}</span><span style="display:flex;gap:8px"><button class="btn ghost sm" onclick="excluir('${l.id}')" title="Excluir cadastro">🗑</button><button class="btn sm" onclick="baixarPDF(${LEADS.indexOf(l)})">⬇ PDF</button></span></div>
     </div>`;
   }).join('');
+}
+
+async function excluir(id){
+  const l = LEADS.find(x => x.id === id);
+  if(!l) return;
+  if(!confirm('Excluir o cadastro de "' + (l.nome||'(sem nome)') + '"? Essa ação não pode ser desfeita.')) return;
+  try{
+    const r = await fetch('/api/leads', { method:'DELETE', headers:{ 'Content-Type':'application/json', 'x-access-code': CODE }, body: JSON.stringify({ id:id }) });
+    if(r.status === 401){ sair('Sessão expirada. Entre de novo.'); return; }
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||'erro');
+    const i = LEADS.findIndex(x => x.id === id);
+    if(i >= 0) LEADS.splice(i, 1);
+    render();
+  }catch(e){ alert('Não foi possível excluir agora. Tente de novo.'); }
 }
 
 // ---------- PDF ----------
