@@ -124,6 +124,7 @@ function render(){
       <div class="row"><span class="l">Encontrou por</span><span class="v">${esc(l.origem)||'—'}</span></div>
       <div class="row"><span class="l">Motivo</span><span class="v">${esc(l.motivo)||'—'}</span></div>
       <div class="row"><span class="l">Expectativa</span><span class="v">${esc(l.expectativa)||'—'}</span></div>
+      ${l.plano?`<div class="row"><span class="l">Plano escolhido</span><span class="v" style="color:var(--wine);font-weight:bold">${esc(l.plano)}</span></div>`:''}
       <div class="foot"><span class="dt">🕒 ${fmtData(l.criadoEm)}</span><span style="display:flex;gap:8px"><button class="btn ghost sm" onclick="excluir('${l.id}')" title="Excluir cadastro">🗑</button><button class="btn sm" onclick="baixarPDF(${LEADS.indexOf(l)})">⬇ PDF</button></span></div>
     </div>`;
   }).join('');
@@ -164,6 +165,7 @@ function pagPaciente(doc, l){
     ['Como me encontrou', l.origem],
     ['O que motivou buscar terapia', l.motivo],
     ['O que espera encontrar', l.expectativa],
+    ['Plano escolhido (interesse)', l.plano],
     ['Data do cadastro', fmtData(l.criadoEm)]
   ];
   let y = 66;

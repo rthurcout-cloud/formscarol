@@ -130,12 +130,53 @@ document.getElementById('leadForm').addEventListener('submit', function(e){
       expectativa: r('expectativa')
     };
     if(lead.nome || lead.whatsapp){
-      fetch('/api/leads', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lead), keepalive:true }).catch(function(){});
+      fetch('/api/leads', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lead), keepalive:true })
+        .then(function(res){ return res.json(); })
+        .then(function(j){ if(j && j.id){ window.__leadId = j.id; if(window.__plano){ salvarPlano(); } } })
+        .catch(function(){});
     }
   } catch(err){ /* nunca quebra o formulario */ }
   // comportamento original: revela os valores
   document.getElementById('pricing').classList.add('show');
   document.getElementById('pricing').scrollIntoView({behavior:'smooth', block:'start'});
 });
+
+// envia o plano escolhido para o cadastro ja salvo
+function salvarPlano(){
+  if(!window.__leadId || !window.__plano) return;
+  fetch('/api/leads', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id:window.__leadId, plano:window.__plano }), keepalive:true }).catch(function(){});
+}
+
+// deixa os cartoes de valor clicaveis (a pessoa escolhe a opcao)
+(function(){
+  var cards = document.querySelectorAll('#pricing .pricing .card');
+  if(!cards.length) return;
+  var st = document.createElement('style');
+  st.textContent = '#pricing .pricing .card{cursor:pointer;transition:box-shadow .15s ease,transform .15s ease}'
+    + '#pricing .pricing .card:hover{transform:translateY(-2px)}'
+    + '#pricing .pricing .card.selected{box-shadow:0 0 0 3px #a17d70,0 14px 34px rgba(75,16,24,.18)}'
+    + '#pricing .pricing .card .sel-badge{display:none}'
+    + '#pricing .pricing .card.selected .sel-badge{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:bold;color:#a17d70}'
+    + '#pricing .pricing .card.featured.selected .sel-badge{color:#f0dfd6}';
+  document.head.appendChild(st);
+  cards.forEach(function(c){
+    var badge = document.createElement('div'); badge.className = 'sel-badge'; badge.textContent = '✓ Opção escolhida';
+    c.appendChild(badge);
+    c.addEventListener('click', function(){
+      cards.forEach(function(x){ x.classList.remove('selected'); });
+      c.classList.add('selected');
+      var h3 = c.querySelector('h3'), pr = c.querySelector('.price');
+      window.__plano = ((h3 ? h3.textContent.trim() : '') + (pr ? ' - ' + pr.textContent.trim() : '')).trim();
+      salvarPlano();
+    });
+  });
+  var cta = document.querySelector('#pricing .invest-cta .btn');
+  if(cta){
+    cta.addEventListener('click', function(e){
+      if(!window.__plano){ e.preventDefault(); alert('Escolha uma opção de valor (toque em um dos cartões) antes de continuar. 🤎'); return; }
+      salvarPlano();
+    });
+  }
+})();
 </script>
 </body></html>
