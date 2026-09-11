@@ -37,6 +37,13 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   if(req.method === 'OPTIONS'){ res.status(200).end(); return; }
 
+  // diagnostico temporario: lista os NOMES das variaveis de ambiente relacionadas (sem valores)
+  if(req.method === 'GET' && req.url && req.url.indexOf('diag') !== -1){
+    const names = Object.keys(process.env).filter(function(k){ return /KV|REDIS|UPSTASH/i.test(k); }).sort();
+    res.status(200).json({ ok:true, envNames:names, hasUrl:!!KV_URL, hasToken:!!KV_TOKEN });
+    return;
+  }
+
   if(!KV_URL || !KV_TOKEN){ res.status(500).json({ ok:false, error:'KV nao configurado' }); return; }
 
   try {
