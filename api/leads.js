@@ -1,7 +1,7 @@
 // /api/leads.js — guarda e le os cadastros de pacientes (Vercel KV / Upstash Redis via REST)
 // POST (publico): salva um cadastro.  GET (protegido por senha): lista todos.
-const KV_URL = process.env.KV_REST_API_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_REST_API_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_REST_API_TOKEN;
 const LIST_KEY = 'carolina:leads';
 
 async function kv(cmd){
