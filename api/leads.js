@@ -82,14 +82,14 @@ module.exports = async (req, res) => {
       // paciente completando o proprio cadastro com a opcao de valor escolhida (publico)
       const body = (await readJson(req)) || {};
       const id = ('' + (body.id || '')).slice(0, 60);
-      const plano = clean(body.plano, 80);
       if(!id){ res.status(400).json({ ok:false, error:'id ausente' }); return; }
       const arr = (await kv(['LRANGE', LIST_KEY, '0', '-1'])) || [];
       const idx = arr.findIndex(function(s){ try { return JSON.parse(s).id === id; } catch(e){ return false; } });
       if(idx < 0){ res.status(404).json({ ok:false, error:'nao encontrado' }); return; }
       let obj; try { obj = JSON.parse(arr[idx]); } catch(e){ obj = {}; }
-      obj.plano = plano;
-      obj.planoEm = new Date().toISOString();
+      if(body.plano !== undefined){ obj.plano = clean(body.plano, 80); }
+      if(body.preferencia !== undefined){ obj.preferencia = clean(body.preferencia, 200); }
+      obj.atualizadoEm = new Date().toISOString();
       await kv(['LSET', LIST_KEY, '' + idx, JSON.stringify(obj)]);
       res.status(200).json({ ok:true });
       return;

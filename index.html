@@ -102,7 +102,7 @@ footer{background:#f5ebe3;padding:28px 7vw;display:flex;justify-content:space-be
 <div class="field full"><button class="btn" type="submit">CONTINUAR <span class="arrow">→</span></button></div>
 </div></form></div>
 
-<div id="pricing" class="reveal"><div class="kicker">INVESTIMENTO</div><h2>Escolha a forma que<br>faz mais sentido para você.</h2>
+<div id="pricing" class="reveal"><div class="lead-gate" style="margin-bottom:34px"><div class="kicker">Preferência de atendimento</div><h3>Qual o melhor dia e horário para você?</h3><p>Me conte a sua preferência — depois combinamos juntos o horário exato. 🤎</p><div class="formgrid"><div class="field"><label for="prefDia">Melhor dia</label><input id="prefDia" placeholder="Ex.: segunda, quarta, sábado..."></div><div class="field"><label for="prefHora">Melhor horário</label><input id="prefHora" placeholder="Ex.: manhã, tarde, após as 18h..."></div></div></div><div class="kicker">INVESTIMENTO</div><h2>Escolha a forma que<br>faz mais sentido para você.</h2>
 <div class="pricing"><div class="card"><h3>SESSÃO INDIVIDUAL</h3><div class="price">R$ 140</div><p>Atendimento psicológico individual com duração de 50 minutos.</p></div>
 <div class="card featured"><span class="tag">MAIS ESCOLHIDO</span><h3>PACOTE MENSAL</h3><div class="price">R$ 420</div><p>4 sessões no mês<br><strong>(um encontro semanal).</strong></p></div>
 <div class="perks"><div class="perk"><span class="check">✓</span>Atendimento individualizado</div><div class="perk"><span class="check">✓</span>Ambiente seguro e acolhedor</div><div class="perk"><span class="check">✓</span>Flexibilidade na frequência</div><div class="perk"><span class="check">✓</span>Foco em estratégias práticas</div><div class="perk"><span class="check">✓</span>Acompanhamento ético e cuidadoso</div></div></div>
@@ -132,7 +132,7 @@ document.getElementById('leadForm').addEventListener('submit', function(e){
     if(lead.nome || lead.whatsapp){
       fetch('/api/leads', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lead), keepalive:true })
         .then(function(res){ return res.json(); })
-        .then(function(j){ if(j && j.id){ window.__leadId = j.id; if(window.__plano){ salvarPlano(); } } })
+        .then(function(j){ if(j && j.id){ window.__leadId = j.id; if(window.__plano){ salvarPlano(); } if(window.__salvarPreferencia){ window.__salvarPreferencia(); } } })
         .catch(function(){});
     }
   } catch(err){ /* nunca quebra o formulario */ }
@@ -146,6 +146,25 @@ function salvarPlano(){
   if(!window.__leadId || !window.__plano) return;
   fetch('/api/leads', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id:window.__leadId, plano:window.__plano }), keepalive:true }).catch(function(){});
 }
+
+// preferencia de dia/horario do atendimento -> salva no cadastro
+function coletarPreferencia(){
+  var d = document.getElementById('prefDia'); var h = document.getElementById('prefHora');
+  var dv = d ? (d.value||'').trim() : ''; var hv = h ? (h.value||'').trim() : '';
+  return [dv, hv].filter(Boolean).join(' · ');
+}
+window.__salvarPreferencia = function(){
+  if(!window.__leadId) return;
+  var p = coletarPreferencia();
+  if(!p) return;
+  fetch('/api/leads', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id:window.__leadId, preferencia:p }), keepalive:true }).catch(function(){});
+};
+(function(){
+  ['prefDia','prefHora'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.addEventListener('change', window.__salvarPreferencia); el.addEventListener('blur', window.__salvarPreferencia); }
+  });
+})();
 
 // deixa os cartoes de valor clicaveis (a pessoa escolhe a opcao)
 (function(){
@@ -173,6 +192,7 @@ function salvarPlano(){
   var cta = document.querySelector('#pricing .invest-cta .btn');
   if(cta){
     cta.addEventListener('click', function(e){
+      if(window.__salvarPreferencia){ window.__salvarPreferencia(); }
       if(!window.__plano){ e.preventDefault(); alert('Escolha uma opção de valor (toque em um dos cartões) antes de continuar. 🤎'); return; }
       salvarPlano();
     });
