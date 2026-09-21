@@ -205,5 +205,25 @@ window.__salvarPreferencia = function(){
     });
   }
 })();
+
+// leva os dados (nome, preferencia de dia/hora, plano) para a mensagem do WhatsApp da Carolina
+(function(){
+  var waBtns = Array.prototype.slice.call(document.querySelectorAll('a[href*="wa.me/5521982583105"]'));
+  if(!waBtns.length) return;
+  function montarMsg(){
+    var nome = (document.getElementById('nome') || {}).value || '';
+    var pref = coletarPreferencia();
+    var plano = window.__plano || '';
+    var linhas = ['Olá, Carolina! 🤎 Vim pelo seu site e gostaria de dar o primeiro passo.'];
+    if(nome.trim()){ linhas.push('Meu nome: ' + nome.trim()); }
+    if(pref){ linhas.push('Preferência de atendimento: ' + pref.replace(' · ', ' às ')); }
+    if(plano){ linhas.push('Plano de interesse: ' + plano); }
+    linhas.push('Podemos conversar?');
+    return linhas.join('\n');
+  }
+  waBtns.forEach(function(a){
+    a.addEventListener('click', function(){ a.href = 'https://wa.me/5521982583105?text=' + encodeURIComponent(montarMsg()); });
+  });
+})();
 </script>
 </body></html>
